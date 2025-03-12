@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SungrowDashboard", "SungrowDashboard.csproj", "{13A6EB76-965A-B893-0DA3-C96A48B9601A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{13A6EB76-965A-B893-0DA3-C96A48B9601A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13A6EB76-965A-B893-0DA3-C96A48B9601A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13A6EB76-965A-B893-0DA3-C96A48B9601A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13A6EB76-965A-B893-0DA3-C96A48B9601A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D3BFD58F-E79D-427C-9CA9-52B10F0096EE}
+	EndGlobalSection
+EndGlobal

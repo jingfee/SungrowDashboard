@@ -1,0 +1,48 @@
+# Binära filer och byggartefakter
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.nuget.props
+*.nuget.targets
+
+# Paket och cache
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.assets.json
+.nuget/
+
+# Användarspecifika filer
+*.user
+*.suo
+*.vs/
+*.vscode/
+*.DS_Store
+
+# Publiceringsutdata
+wwwroot/
+publish/
+out/
+
+# Docker-relaterade filer
+**/Dockerfile
+**/docker-compose.yml
+!docker-compose.override.yml
+
+# Konfigurationsfiler som kan innehålla känslig information
+secrets.json
+appsettings.Development.json
+
+# IDE-specifika filer
+.idea/
+*.sln.DotSettings
+
+# Loggar
+*.log
+log/
+
+# Blazor WebAssembly (WASM) specifikt
+wwwroot/_framework/

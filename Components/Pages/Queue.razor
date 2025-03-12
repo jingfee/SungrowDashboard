@@ -1,0 +1,147 @@
+﻿@page "/"
+@inject IDialogService DialogService
+@inject IServiceBusService ServiceBusService
+
+<h1>Messages</h1>
+
+<MudTable Items="@queueMessages.OrderBy(q => q.ScheduledDateTime)" Hover="true" Breakpoint="Breakpoint.Sm"
+    Class="mt-4 mb-4">
+    <HeaderContent>
+        <MudTh>Time</MudTh>
+        <MudTh>Operation</MudTh>
+        <MudTh>Rank</MudTh>
+        <MudTh>Power</MudTh>
+        <MudTh>Target SoC</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        @{
+            var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(context.ScheduledDateTime!.Value.DateTime,
+            TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+        }
+        <MudTd DataLabel="Time">@localDateTime.ToString("yyyy-MM-dd HH:mm")</MudTd>
+        <MudTd DataLabel="Operation">@context.Body!.Operation</MudTd>
+        <MudTd DataLabel="Rank">@context.Body!.Rank</MudTd>
+        <MudTd DataLabel="Power">@context.Body!.Power</MudTd>
+        <MudTd DataLabel="Target SoC">@context.Body!.TargetSoc</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
+                @onclick="@(e => EditMessage(context))" />
+            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"
+                @onclick="@(e => DeleteMessage(context))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@CreateMessage">Create item
+</MudButton>
+
+
+@code {
+    private List<QueueMessage> queueMessages = new List<QueueMessage>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        queueMessages = await ServiceBusService.ReceiveMessages();
+    }
+
+    private async Task DeleteMessage(QueueMessage message)
+    {
+        if (message == null || !message.SequenceNumber.HasValue)
+        {
+            return;
+        }
+
+        await ServiceBusService.RemoveMessage(message.SequenceNumber!.Value);
+        queueMessages.Remove(message);
+    }
+
+    private async Task EditMessage(QueueMessage message)
+    {
+        if (message == null || !message.SequenceNumber.HasValue)
+        {
+            return;
+        }
+
+        var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(message.ScheduledDateTime!.Value.DateTime,
+        TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
+
+        QueueItemModel model = new QueueItemModel()
+        {
+            Date = localDateTime,
+            Time = localDateTime.TimeOfDay,
+            Operation = ((int)message.Body!.Operation!).ToString(),
+            Power = message.Body.Power,
+            Rank = message.Body.Rank,
+            TargetSoc = message.Body.TargetSoc,
+        };
+        QueueMessage? item = await OpenQueueItemDialog(model, "Edit message");
+
+        if (item == null)
+        {
+            return;
+        }
+
+        await ServiceBusService.RemoveMessage(message.SequenceNumber.Value);
+        queueMessages.Remove(message);
+        item.SequenceNumber = await ServiceBusService.AddMessage(item);
+        queueMessages.Add(item);
+    }
+
+    private async Task CreateMessage()
+    {
+        QueueMessage? item = await OpenQueueItemDialog(new(), "Create message");
+
+        if (item == null)
+        {
+            return;
+        }
+
+        item.SequenceNumber = await ServiceBusService.AddMessage(item);
+        queueMessages.Add(item);
+    }
+
+    private async Task<QueueMessage?> OpenQueueItemDialog(QueueItemModel model, string title)
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+            BackdropClick = false
+        };
+        var parameters = new DialogParameters<QueueItemDialog> { { x => x.Model, model } };
+
+        var dialog = await DialogService.ShowAsync<QueueItemDialog>(title, parameters, options);
+        var result = await dialog.Result;
+
+        if (result!.Canceled || result.Data == null)
+        {
+            return null;
+        }
+
+        QueueItemModel dialogData = (QueueItemModel)result.Data;
+
+        QueueBody body = new QueueBody()
+        {
+            Operation = (Operation)Enum.Parse(typeof(Operation), dialogData.Operation!),
+            Power = dialogData.Power,
+            Rank = dialogData.Rank,
+            TargetSoc = dialogData.TargetSoc
+        };
+
+        DateTime scheduledTime = new DateTime(DateOnly.FromDateTime(dialogData.Date!.Value),
+        TimeOnly.FromTimeSpan(dialogData.Time!.Value));
+        TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        DateTime scheduledTimeUtc = TimeZoneInfo.ConvertTimeToUtc(scheduledTime, timeZone);
+
+        QueueMessage item = new QueueMessage()
+        {
+            ScheduledDateTime = scheduledTimeUtc,
+            Body = body
+        };
+
+        return item;
+    }
+}

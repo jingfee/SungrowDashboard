@@ -1,0 +1,85 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            @Dialog!.Title
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm EditContext="@_editContext" FormName="CreateQueueItem" Enhance Class="pb-4">
+            <DataAnnotationsValidator />
+            <MudSelect @bind-Value="@Model!.Operation" Label="Operation">
+                @foreach (var operationItem in operationItems!)
+                {
+                    <MudSelectItem Value="@(((int)operationItem).ToString())">@operationItem.ToString()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker Label="Date" Editable="true" Mask="@(new DateMask("0000-00-00"))" DateFormat="yyyy-MM-dd"
+                @bind-Date="@Model!.Date" Class="mt-2" />
+            <MudTimePicker Label="Time" Editable="true" @bind-Time="@Model!.Time" Class="mt-2" />
+
+            @if (Model!.Operation == ((int)Operation.StartDischarge).ToString())
+            {
+                <MudNumericField @bind-Value="@Model!.Rank" Label="Rank" Min="0" HideSpinButtons="true" Class="mt-2" />
+            }
+
+            @if (Model!.Operation == ((int)Operation.StartCharge).ToString())
+            {
+                <MudNumericField @bind-Value="@Model!.Power" Label="Power" Min="0" Max="8000" HideSpinButtons="true"
+                    Class="mt-2" />
+            }
+
+            @if (Model!.Operation == ((int)Operation.StartCharge).ToString() || Model!.Operation ==
+                        ((int)Operation.StopCharge).ToString())
+            {
+                <MudNumericField @bind-Value="@Model!.TargetSoc" Label="Target SoC" Min="0.0M" Max="1.0M" Step=".1M"
+                    HideSpinButtons="true" Class="mt-2" />
+            }
+
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <div class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" Appearance="Appearance.Neutral"
+                @onclick="@Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_editContext.Validate())"
+                @onclick="@Save">
+                Save
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private EditContext _editContext = default!;
+
+    [Parameter]
+    public QueueItemModel Model { get; set; } = default!;
+
+    [CascadingParameter]
+    public IMudDialogInstance? Dialog { get; set; }
+
+    private IEnumerable<Operation>? operationItems { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(Model);
+        operationItems = Enum.GetValues(typeof(Operation)).Cast<Operation>();
+    }
+
+    private void Save()
+    {
+        if (!_editContext.Validate())
+        {
+            return;
+        }
+
+        Dialog!.Close(DialogResult.Ok(Model));
+    }
+
+    private void Cancel()
+    {
+        Dialog!.Cancel();
+    }
+}
