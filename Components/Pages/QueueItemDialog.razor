@@ -13,9 +13,8 @@
                     <MudSelectItem Value="@(((int)operationItem).ToString())">@operationItem.ToString()</MudSelectItem>
                 }
             </MudSelect>
-            <MudDatePicker Label="Date" Editable="true" Mask="@(new DateMask("0000-00-00"))" DateFormat="yyyy-MM-dd"
-                @bind-Date="@Model!.Date" Class="mt-2" />
-            <MudTimePicker Label="Time" Editable="true" @bind-Time="@Model!.Time" Class="mt-2" />
+            <MudDatePicker Label="Date" @bind-Date="@Model!.Date" Class="mt-2" />
+            <MudTimePicker Label="Time" @bind-Time="@Model!.Time" Class="mt-2" />
 
             @if (Model!.Operation == ((int)Operation.StartDischarge).ToString())
             {

@@ -2,7 +2,7 @@
 @inject IDialogService DialogService
 @inject IServiceBusService ServiceBusService
 
-<MudText Typo="Typo.h4">Messages</MudText>
+<MudText Typo="Typo.h5">Queue</MudText>
 
 <MudTable Items="@queueMessages.OrderBy(q => q.ScheduledDateTime)" Hover="true" Breakpoint="Breakpoint.Sm"
     Class="mt-4 mb-4" Dense="true" SortLabel="Sort By">
