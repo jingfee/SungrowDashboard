@@ -1,0 +1,35 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            @Dialog!.Title
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1">Are you sure?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <div class="mt-4">
+            <MudButton Variant="Variant.Filled" Appearance="Appearance.Neutral" @onclick="@Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="@Confirm">
+                Confirm
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public IMudDialogInstance? Dialog { get; set; }
+
+    private void Confirm()
+    {
+        Dialog!.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        Dialog!.Cancel();
+    }
+}

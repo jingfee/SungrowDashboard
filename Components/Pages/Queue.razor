@@ -2,16 +2,32 @@
 @inject IDialogService DialogService
 @inject IServiceBusService ServiceBusService
 
-<h1>Messages</h1>
+<MudText Typo="Typo.h4">Messages</MudText>
 
 <MudTable Items="@queueMessages.OrderBy(q => q.ScheduledDateTime)" Hover="true" Breakpoint="Breakpoint.Sm"
-    Class="mt-4 mb-4">
+    Class="mt-4 mb-4" Dense="true" SortLabel="Sort By">
     <HeaderContent>
-        <MudTh>Time</MudTh>
-        <MudTh>Operation</MudTh>
-        <MudTh>Rank</MudTh>
-        <MudTh>Power</MudTh>
-        <MudTh>Target SoC</MudTh>
+        <MudTh>
+            <MudTableSortLabel InitialDirection="SortDirection.Ascending"
+                SortBy="new Func<QueueMessage, object>(x => x.ScheduledDateTime!)">Time
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.Operation!)">Operation
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.Rank!)">Rank
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.Power!)">Power
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.TargetSoc!)">Target SoC
+            </MudTableSortLabel>
+        </MudTh>
         <MudTh></MudTh>
     </HeaderContent>
 
@@ -26,10 +42,12 @@
         <MudTd DataLabel="Power">@context.Body!.Power</MudTd>
         <MudTd DataLabel="Target SoC">@context.Body!.TargetSoc</MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
-                @onclick="@(e => EditMessage(context))" />
-            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"
-                @onclick="@(e => DeleteMessage(context))" />
+            <div class="d-flex justify-end" style="width: 100%">
+                <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
+                    @onclick="@(e => EditMessage(context))" />
+                <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"
+                    @onclick="@(e => DeleteMessage(context))" />
+            </div>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -49,6 +67,22 @@
     private async Task DeleteMessage(QueueMessage message)
     {
         if (message == null || !message.SequenceNumber.HasValue)
+        {
+            return;
+        }
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+            BackdropClick = false
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove message", options);
+        var result = await dialog.Result;
+
+        if (result!.Canceled || result.Data == null || !(bool)result.Data)
         {
             return;
         }
