@@ -15,7 +15,7 @@ public class RequiredIfAttribute : ValidationAttribute
         _expectedValues = new HashSet<object>(expectedValues);
     }
 
-    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
     {
         var otherPropertyInfo = validationContext.ObjectType.GetProperty(_otherProperty);
         if (otherPropertyInfo == null)
@@ -30,6 +30,6 @@ public class RequiredIfAttribute : ValidationAttribute
             return new ValidationResult(ErrorMessage ?? $"{validationContext.DisplayName} is required when {_otherProperty} is one of {string.Join(", ", _expectedValues)}.");
         }
 
-        return ValidationResult.Success;
+        return ValidationResult.Success!;
     }
 }

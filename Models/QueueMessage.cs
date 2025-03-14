@@ -5,14 +5,14 @@ namespace SungrowDashboard.Models;
 public class QueueMessage
 {
     public long? SequenceNumber { get; set; }
-    public DateTimeOffset? ScheduledDateTime { get; set; }
-    public QueueBody? Body {get;set;}
+    public DateTimeOffset ScheduledDateTime { get; set; }
+    public QueueBody Body { get; set; } = default!;
 
 }
 
 public class QueueBody {
     [JsonPropertyName("operation")]
-    public Operation? Operation { get; set; }
+    public Operation Operation { get; set; }
     [JsonPropertyName("power")]
     public int? Power { get; set; }
     [JsonPropertyName("targetSoc")]
@@ -25,5 +25,6 @@ public enum Operation {
     StartCharge,
     StopCharge,
     StartDischarge,
-    StopDischarge
+    StopDischarge,
+    SetDischargeAfterSolar
 }

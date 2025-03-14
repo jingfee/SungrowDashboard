@@ -4,28 +4,28 @@
 
 <MudText Typo="Typo.h5">Queue</MudText>
 
-<MudTable Items="@queueMessages.OrderBy(q => q.ScheduledDateTime)" Hover="true" Breakpoint="Breakpoint.Sm"
-    Class="mt-4 mb-4" Dense="true" SortLabel="Sort By">
+<MudTable Items="@_queueMessages.OrderBy(q => q.ScheduledDateTime)" Hover="true" Breakpoint="Breakpoint.Sm"
+    Class="mt-4 mb-4" Dense="true" SortLabel="Sort By" Loading="@_loading">
     <HeaderContent>
         <MudTh>
             <MudTableSortLabel InitialDirection="SortDirection.Ascending"
-                SortBy="new Func<QueueMessage, object>(x => x.ScheduledDateTime!)">Time
+                SortBy="new Func<QueueMessage, object>(x => x.ScheduledDateTime)">Time
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.Operation!)">Operation
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body.Operation)">Operation
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.Rank!)">Rank
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body.Rank!)">Rank
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.Power!)">Power
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body.Power!)">Power
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body!.TargetSoc!)">Target SoC
+            <MudTableSortLabel SortBy="new Func<QueueMessage, object>(x => x.Body.TargetSoc!)">Target SoC
             </MudTableSortLabel>
         </MudTh>
         <MudTh></MudTh>
@@ -33,14 +33,14 @@
 
     <RowTemplate>
         @{
-            var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(context.ScheduledDateTime!.Value.DateTime,
+            var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(context.ScheduledDateTime.DateTime,
             TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
         }
         <MudTd DataLabel="Time">@localDateTime.ToString("yyyy-MM-dd HH:mm")</MudTd>
-        <MudTd DataLabel="Operation">@context.Body!.Operation</MudTd>
-        <MudTd DataLabel="Rank">@context.Body!.Rank</MudTd>
-        <MudTd DataLabel="Power">@context.Body!.Power</MudTd>
-        <MudTd DataLabel="Target SoC">@context.Body!.TargetSoc</MudTd>
+        <MudTd DataLabel="Operation">@context.Body.Operation</MudTd>
+        <MudTd DataLabel="Rank">@context.Body.Rank</MudTd>
+        <MudTd DataLabel="Power">@context.Body.Power</MudTd>
+        <MudTd DataLabel="Target SoC">@context.Body.TargetSoc</MudTd>
         <MudTd>
             <div class="d-flex justify-end" style="width: 100%">
                 <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
@@ -57,11 +57,14 @@
 
 
 @code {
-    private List<QueueMessage> queueMessages = new List<QueueMessage>();
+    private List<QueueMessage> _queueMessages = new List<QueueMessage>();
+    private bool _loading;
 
     protected override async Task OnInitializedAsync()
     {
-        queueMessages = await ServiceBusService.ReceiveMessages();
+        _loading = true;
+        _queueMessages = await ServiceBusService.ReceiveMessages();
+        _loading = false;
     }
 
     private async Task DeleteMessage(QueueMessage message)
@@ -88,7 +91,7 @@
         }
 
         await ServiceBusService.RemoveMessage(message.SequenceNumber!.Value);
-        queueMessages.Remove(message);
+        _queueMessages.Remove(message);
     }
 
     private async Task EditMessage(QueueMessage message)
@@ -98,14 +101,14 @@
             return;
         }
 
-        var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(message.ScheduledDateTime!.Value.DateTime,
+        var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(message.ScheduledDateTime.DateTime,
         TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time"));
 
         QueueItemModel model = new QueueItemModel()
         {
             Date = localDateTime,
             Time = localDateTime.TimeOfDay,
-            Operation = ((int)message.Body!.Operation!).ToString(),
+            Operation = ((int)message.Body.Operation).ToString(),
             Power = message.Body.Power,
             Rank = message.Body.Rank,
             TargetSoc = message.Body.TargetSoc,
@@ -118,9 +121,9 @@
         }
 
         await ServiceBusService.RemoveMessage(message.SequenceNumber.Value);
-        queueMessages.Remove(message);
+        _queueMessages.Remove(message);
         item.SequenceNumber = await ServiceBusService.AddMessage(item);
-        queueMessages.Add(item);
+        _queueMessages.Add(item);
     }
 
     private async Task CreateMessage()
@@ -133,7 +136,7 @@
         }
 
         item.SequenceNumber = await ServiceBusService.AddMessage(item);
-        queueMessages.Add(item);
+        _queueMessages.Add(item);
     }
 
     private async Task<QueueMessage?> OpenQueueItemDialog(QueueItemModel model, string title)

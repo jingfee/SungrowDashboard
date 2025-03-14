@@ -1,6 +1,8 @@
 using SungrowDashboard.Components;
 using MudBlazor.Services;
 using SungrowDashboard.Services;
+using Azure.Messaging.ServiceBus;
+using Azure.Data.Tables;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,15 @@ builder.Configuration
 
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
+builder.Services.AddSingleton(new ServiceBusClient(builder.Configuration["AppSettings:ServiceBusConnectionString"]));
+var azureDataTableAccountName = builder.Configuration["AppSettings:AzureDataTableAccountName"];
+var credential = new TableSharedKeyCredential(azureDataTableAccountName, builder.Configuration["AppSettings:AzureDataTableAccountKey"]);
+builder.Services.AddSingleton(new TableClient(
+    new Uri($"https://{azureDataTableAccountName}.table.core.windows.net"),
+    builder.Configuration["AppSettings:AzureDataTableTableName"],
+    credential));
 builder.Services.AddScoped<IServiceBusService, ServiceBusService>();
+builder.Services.AddScoped<IDataTableService, DataTableService>();
 
 var app = builder.Build();
 

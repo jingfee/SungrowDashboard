@@ -1,3 +1,35 @@
 @page "/data"
+@inject IDataTableService DataTableService
 
 <MudText Typo="Typo.h5">Data</MudText>
+
+<MudTable Items="@_batteryData" Hover="true" Breakpoint="Breakpoint.Sm" Class="mt-4 mb-4" Loading="@_loading">
+    <HeaderContent>
+        <MudTh>Partition Key</MudTh>
+        <MudTh>Timestamp</MudTh>
+        <MudTh>Value</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        @{
+            DateTime? localDateTime = context.Timestamp.HasValue ?
+            TimeZoneInfo.ConvertTimeFromUtc(context.Timestamp.Value.DateTime,
+            TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time")) : null;
+        }
+        <MudTd DataLabel="Partition Key">@context.PartitionKey</MudTd>
+        <MudTd DataLabel="Timestamp">@localDateTime?.ToString("yyyy-MM-dd HH:mm")</MudTd>
+        <MudTd DataLabel="Value">@context.Value</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<BatteryData> _batteryData = new List<BatteryData>();
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _batteryData = await DataTableService.GetAllDataValues();
+        _loading = false;
+    }
+}

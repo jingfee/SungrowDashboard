@@ -8,17 +8,16 @@ namespace SungrowDashboard.Services;
 
 public class ServiceBusService : IServiceBusService
 {
-    private readonly string _serviceBusConnectionString;
+    private readonly ServiceBusClient _client;
 
-    public ServiceBusService(IOptions<AppSettings> options)
+    public ServiceBusService(ServiceBusClient client)
     {
-        _serviceBusConnectionString = options.Value.ServiceBusConnectionString;
+        _client = client;
     }
 
     public async Task<List<QueueMessage>> ReceiveMessages()
     {
-        await using var client = new ServiceBusClient(_serviceBusConnectionString);
-        ServiceBusReceiver receiver = client.CreateReceiver("battery-queue");
+        ServiceBusReceiver receiver = _client.CreateReceiver("battery-queue");
         IReadOnlyList<ServiceBusReceivedMessage>  messages = await receiver.PeekMessagesAsync(100);
 
         List<QueueMessage> queueMessages = new List<QueueMessage>();
@@ -36,15 +35,13 @@ public class ServiceBusService : IServiceBusService
     }
 
     public async Task RemoveMessage(long sequenceNumber) {
-        await using var client = new ServiceBusClient(_serviceBusConnectionString);
-        ServiceBusSender sender = client.CreateSender("battery-queue");
+        ServiceBusSender sender = _client.CreateSender("battery-queue");
         await sender.CancelScheduledMessageAsync(sequenceNumber);
     }
 
     public async Task<long> AddMessage(QueueMessage queueMessage) {
-        await using var client = new ServiceBusClient(_serviceBusConnectionString);
-        ServiceBusSender sender = client.CreateSender("battery-queue");
+        ServiceBusSender sender = _client.CreateSender("battery-queue");
         ServiceBusMessage serviceBusMessage = new ServiceBusMessage(JsonSerializer.Serialize(queueMessage.Body, new JsonSerializerOptions() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }));
-        return await sender.ScheduleMessageAsync(serviceBusMessage, queueMessage.ScheduledDateTime!.Value);
+        return await sender.ScheduleMessageAsync(serviceBusMessage, queueMessage.ScheduledDateTime);
     }
 }
