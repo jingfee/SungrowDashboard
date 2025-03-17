@@ -18,13 +18,13 @@
             @if (IsMobile)
             {
                 <MudTextField Format="yyyy-MM-dd" Label="Date" InputType="InputType.Date" @bind-Value="@Model.Date"
-                    Class="mt-2" />
-                <MudTextField Label="Time" InputType="InputType.Time" @bind-Value="@Model.Time" Class="mt-2" />
+                    Class="mt-4" />
+                <MudTextField Label="Time" InputType="InputType.Time" @bind-Value="@Model.Time" Class="mt-4" />
             }
             else
             {
-                <MudDatePicker Label="Date" @bind-Date="@Model.Date" Class="mt-2" />
-                <MudTimePicker Label="Time" @bind-Time="@Model.Time" Class="mt-2" />
+                <MudDatePicker Label="Date" @bind-Date="@Model.Date" Class="mt-4" />
+                <MudTimePicker Label="Time" @bind-Time="@Model.Time" Class="mt-4" />
             }
 
 
