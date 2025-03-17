@@ -23,7 +23,6 @@ project.assets.json
 *.DS_Store
 
 # Publiceringsutdata
-wwwroot/
 publish/
 out/
 
@@ -46,3 +45,18 @@ log/
 
 # Blazor WebAssembly (WASM) specifikt
 wwwroot/_framework/
+
+# Ignorera genererade filer
+wwwroot/**/*.js.map
+wwwroot/**/*.css.map
+wwwroot/**/*.gz
+wwwroot/**/*.br
+
+# Ignorera output från byggverktyg (men behåll egna filer)
+wwwroot/dist/
+wwwroot/lib/
+
+# Tillåt egna filer
+!wwwroot/js/
+!wwwroot/css/
+!wwwroot/images/

@@ -1,3 +1,5 @@
+@inject IJSRuntime jsRuntime
+
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h5">
@@ -13,8 +15,18 @@
                     <MudSelectItem Value="@(((int)operationItem).ToString())">@operationItem.ToString()</MudSelectItem>
                 }
             </MudSelect>
-            <MudDatePicker Label="Date" @bind-Date="@Model.Date" Class="mt-2" />
-            <MudTimePicker Label="Time" @bind-Time="@Model.Time" Class="mt-2" />
+            @if (IsMobile)
+            {
+                <MudTextField Format="yyyy-MM-dd" Label="Date" InputType="InputType.Date" @bind-Value="@Model.Date"
+                    Class="mt-2" />
+                <MudTextField Label="Time" InputType="InputType.Time" @bind-Value="@Model.Time" Class="mt-2" />
+            }
+            else
+            {
+                <MudDatePicker Label="Date" @bind-Date="@Model.Date" Class="mt-2" />
+                <MudTimePicker Label="Time" @bind-Time="@Model.Time" Class="mt-2" />
+            }
+
 
             @if (Model.Operation == ((int)Operation.StartDischarge).ToString())
             {
@@ -56,6 +68,7 @@
 
     [CascadingParameter]
     public IMudDialogInstance Dialog { get; set; } = default!;
+    public bool IsMobile { get; set; }
 
     private IEnumerable<Operation> _operationItems = default!;
     private EditContext _editContext = default!;
@@ -64,6 +77,12 @@
     {
         _editContext = new EditContext(Model);
         _operationItems = Enum.GetValues(typeof(Operation)).Cast<Operation>();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsMobile = await jsRuntime.InvokeAsync<bool>("isMobile");
+
     }
 
     private void Save()
