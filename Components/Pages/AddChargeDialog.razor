@@ -1,0 +1,86 @@
+@inject IJSRuntime jsRuntime
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            Add charge
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm EditContext="@_editContext" FormName="AddCharge" Enhance Class="pb-4">
+            <DataAnnotationsValidator />
+            @if (IsMobile)
+            {
+                <MudTextField Format="yyyy-MM-dd" Label="Start date" InputType="InputType.Date"
+                    @bind-Value="@Model.StartDate" Class="mt-4" />
+                <MudTextField Label="Start time" InputType="InputType.Time" @bind-Value="@Model.StartTime" Class="mt-4" />
+
+                <MudTextField Format="yyyy-MM-dd" Label="Stop date" InputType="InputType.Date" @bind-Value="@Model.StopDate"
+                    Class="mt-4" />
+                <MudTextField Label="Stop time" InputType="InputType.Time" @bind-Value="@Model.StopTime" Class="mt-4" />
+            }
+            else
+            {
+                <MudDatePicker Label="Start date" @bind-Date="@Model.StartDate" Class="mt-4" />
+                <MudTimePicker Label="Start time" @bind-Time="@Model.StartTime" Class="mt-4" />
+
+                <MudDatePicker Label="Stop date" @bind-Date="@Model.StopDate" Class="mt-4" />
+                <MudTimePicker Label="Stop time" @bind-Time="@Model.StopTime" Class="mt-4" />
+            }
+
+            <MudNumericField @bind-Value="@Model.Power" Label="Power" Min="0" Max="8000" HideSpinButtons="true"
+                Class="mt-2" />
+
+            <MudNumericField @bind-Value="@Model.TargetSoc" Label="Target SoC" Min="0.0M" Max="1.0M" Step=".1M"
+                HideSpinButtons="true" Class="mt-2" />
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <div class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="@Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_editContext.Validate())"
+                @onclick="@Save">
+                Save
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter]
+    public AddChargeModel Model { get; set; } = default!;
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = default!;
+    public bool IsMobile { get; set; }
+
+    private EditContext _editContext = default!;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(Model);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsMobile = await jsRuntime.InvokeAsync<bool>("isMobile");
+    }
+
+    private void Save()
+    {
+        if (!_editContext.Validate())
+        {
+            return;
+        }
+
+        Dialog.Close(DialogResult.Ok(Model));
+    }
+
+    private void Cancel()
+    {
+        Dialog.Cancel();
+    }
+}

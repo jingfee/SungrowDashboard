@@ -5,7 +5,8 @@
 <MudText Typo="Typo.h5">Queue</MudText>
 
 <MudTable Items="@_queueMessages.OrderBy(q => q.ScheduledDateTime)" Hover="true" Breakpoint="Breakpoint.Sm"
-    Class="mt-4 mb-4" Dense="true" SortLabel="Sort By" Loading="@_loading">
+    Class="mt-4 mb-4" Dense="true" SortLabel="Sort By" Loading="@_loading" MultiSelection="true"
+    @bind-SelectedItems="_selectedMessages">
     <HeaderContent>
         <MudTh>
             <MudTableSortLabel InitialDirection="SortDirection.Ascending"
@@ -52,12 +53,40 @@
     </RowTemplate>
 </MudTable>
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@CreateMessage">Create item
-</MudButton>
+<div class="d-block d-md-flex justify-space-between">
+    <div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@CreateMessage">Create item
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="@OpenAddChargeDialog" Class="mt-4 mt-md-0">
+            Add
+            charge
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Tertiary" @onclick="@OpenAddDischargeDialog"
+            Class="mt-4 mt-md-0">Add
+            discharge
+        </MudButton>
+    </div>
 
+    <div>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Disabled="@(_selectedMessages.Count == 0)"
+            @onclick="@DeleteMessages" Class="mt-4 mt-md-0">Remove selected
+        </MudButton>
+    </div>
+
+</div>
+
+<style>
+    @@media (max-width: 959px) {
+        button {
+            width: 100%;
+            height: 48px;
+        }
+    }
+</style>
 
 @code {
     private List<QueueMessage> _queueMessages = new List<QueueMessage>();
+    private HashSet<QueueMessage> _selectedMessages = new HashSet<QueueMessage>();
     private bool _loading;
 
     protected override async Task OnInitializedAsync()
@@ -74,6 +103,38 @@
             return;
         }
 
+        var result = await ShowConfirmDelete();
+        if (!result)
+        {
+            return;
+        }
+
+        await ServiceBusService.RemoveMessage(message.SequenceNumber!.Value);
+        _queueMessages.Remove(message);
+    }
+
+    private async Task DeleteMessages()
+    {
+        if (_selectedMessages.Count == 0)
+        {
+            return;
+        }
+
+        var result = await ShowConfirmDelete();
+        if (!result)
+        {
+            return;
+        }
+
+        foreach (var message in _selectedMessages)
+        {
+            await ServiceBusService.RemoveMessage(message.SequenceNumber!.Value);
+            _queueMessages.Remove(message);
+        }
+    }
+
+    private async Task<bool> ShowConfirmDelete()
+    {
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
@@ -85,13 +146,7 @@
         var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove message", options);
         var result = await dialog.Result;
 
-        if (result!.Canceled || result.Data == null || !(bool)result.Data)
-        {
-            return;
-        }
-
-        await ServiceBusService.RemoveMessage(message.SequenceNumber!.Value);
-        _queueMessages.Remove(message);
+        return !result!.Canceled && result.Data != null && (bool)result.Data;
     }
 
     private async Task EditMessage(QueueMessage message)
@@ -180,5 +235,43 @@
         };
 
         return item;
+    }
+
+    private async Task OpenAddChargeDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+            BackdropClick = false
+        };
+        var parameters = new DialogParameters<AddChargeDialog> { { x => x.Model, new() } };
+        var dialog = await DialogService.ShowAsync<AddChargeDialog>("Add charge", parameters, options);
+        var result = await dialog.Result;
+
+        if (result!.Canceled || result.Data == null)
+        {
+            return;
+        }
+    }
+
+    private async Task OpenAddDischargeDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+            BackdropClick = false
+        };
+        var parameters = new DialogParameters<AddDischargeDialog> { { x => x.Model, new() } };
+        var dialog = await DialogService.ShowAsync<AddDischargeDialog>("Add discharge", parameters, options);
+        var result = await dialog.Result;
+
+        if (result!.Canceled || result.Data == null)
+        {
+            return;
+        }
     }
 }

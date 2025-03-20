@@ -1,0 +1,82 @@
+@inject IJSRuntime jsRuntime
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">
+            Add discharge
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm EditContext="@_editContext" FormName="AddDischarge" Enhance Class="pb-4">
+            <DataAnnotationsValidator />
+            @if (IsMobile)
+            {
+                <MudTextField Format="yyyy-MM-dd" Label="Start date" InputType="InputType.Date"
+                    @bind-Value="@Model.StartDate" Class="mt-4" />
+                <MudTextField Label="Start time" InputType="InputType.Time" @bind-Value="@Model.StartTime" Class="mt-4" />
+
+                <MudTextField Format="yyyy-MM-dd" Label="Stop date" InputType="InputType.Date" @bind-Value="@Model.StopDate"
+                    Class="mt-4" />
+                <MudTextField Label="Stop time" InputType="InputType.Time" @bind-Value="@Model.StopTime" Class="mt-4" />
+            }
+            else
+            {
+                <MudDatePicker Label="Start date" @bind-Date="@Model.StartDate" Class="mt-4" />
+                <MudTimePicker Label="Start time" @bind-Time="@Model.StartTime" Class="mt-4" />
+
+                <MudDatePicker Label="Stop date" @bind-Date="@Model.StopDate" Class="mt-4" />
+                <MudTimePicker Label="Stop time" @bind-Time="@Model.StopTime" Class="mt-4" />
+            }
+
+            <MudCheckBox @bind-Value="@Model.AddRank" Label="Add rank" Class="mt-4"></MudCheckBox>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <div class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="@Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_editContext.Validate())"
+                @onclick="@Save">
+                Save
+            </MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter]
+    public AddDischargeModel Model { get; set; } = default!;
+
+    [CascadingParameter]
+    public IMudDialogInstance Dialog { get; set; } = default!;
+    public bool IsMobile { get; set; }
+
+    private EditContext _editContext = default!;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(Model);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsMobile = await jsRuntime.InvokeAsync<bool>("isMobile");
+    }
+
+    private void Save()
+    {
+        if (!_editContext.Validate())
+        {
+            return;
+        }
+
+        Dialog.Close(DialogResult.Ok(Model));
+    }
+
+    private void Cancel()
+    {
+        Dialog.Cancel();
+    }
+}
